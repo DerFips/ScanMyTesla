@@ -1,0 +1,36 @@
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Simulator\SCAN my Tesla.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Simulator\SCAN my Tesla.pdb
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Simulator\com.emon.canbus.tesla.apk
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Simulator\com.emon.canbus.tesla-Signed.apk
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Simulator\Xamarin.Android.Support.Animated.Vector.Drawable.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Simulator\Xamarin.Android.Support.v4.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Simulator\Xamarin.Android.Support.v7.RecyclerView.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Simulator\Xamarin.Android.Support.Vector.Drawable.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\TeslaSCAN.csprojResolveAssemblyReference.cache
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\TeslaSCAN.csproj.CoreCompileInputs.cache
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\SCAN my Tesla.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\SCAN my Tesla.pdb
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\android\bin\com.emon.canbus.tesla.apk
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\layout\listitem.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\layout\device_list.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\layout\device_name.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\layout\listitemgauge.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\layout\main.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\values\strings.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\drawable\icon.png
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\values\theme.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\drawable\progressstyle.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\layout\listitem2.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\layout\listitem3.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\menu\main.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\menu\adaptermenu.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\values\base-strings.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\values\dimens.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\values\styles.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\menu\contextmenu.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\menu\optionsmenu.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\res\menu\wrench.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\R.cs.flag
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\uploadflags.txt
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Simulator\SCAN my Tesla.dll.mdb
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Simulator\android\assets\SCAN my Tesla.dll.mdb

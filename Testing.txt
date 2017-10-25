@@ -1,0 +1,11 @@
+HEAD virker ikke på ELM327-adaptere. Gir CAN errors, E39 osv
+Testa HEAD med versjon 0.6 sin BluetoothHandler. Samme problem
+Test full 0.6. Hvis denne virker, finn ut forskjellen på den og 0.7 unntatt bluetoothhandler. (Threading? En eller annen liten endring jeg har missa?)
+
+C41 VIRKER
+C42 VIRKER
+C45 VIRKER (men kræsjer med nullpointer oppstart pga 'change outside ui thread')
+C45 kompilerer ikke
+C46 VIRKER
+C52 VIRKER
+C53 VIRKER IKKE!

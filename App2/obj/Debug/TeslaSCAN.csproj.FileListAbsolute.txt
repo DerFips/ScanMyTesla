@@ -1,0 +1,34 @@
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Debug\SCAN my Tesla.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Debug\SCAN my Tesla.pdb
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Debug\com.emon.canbus.tesla.apk
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Debug\com.emon.canbus.tesla-Signed.apk
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Debug\Xamarin.Android.Support.Animated.Vector.Drawable.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Debug\Xamarin.Android.Support.v4.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Debug\Xamarin.Android.Support.v7.RecyclerView.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\bin\Debug\Xamarin.Android.Support.Vector.Drawable.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\TeslaSCAN.csprojResolveAssemblyReference.cache
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\TeslaSCAN.csproj.CoreCompileInputs.cache
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\SCAN my Tesla.dll
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\SCAN my Tesla.pdb
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\android\bin\com.emon.canbus.tesla.apk
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\layout\listitem.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\layout\device_list.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\layout\device_name.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\layout\listitemgauge.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\layout\main.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\values\strings.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\drawable\icon.png
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\values\theme.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\drawable\progressstyle.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\layout\listitem2.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\layout\listitem3.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\menu\main.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\menu\adaptermenu.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\values\base-strings.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\values\dimens.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\values\styles.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\menu\contextmenu.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\menu\optionsmenu.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\res\menu\wrench.xml
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\R.cs.flag
+C:\Users\amund\source\repos\ScanMyTesla\App2\obj\Debug\uploadflags.txt
