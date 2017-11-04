@@ -58,8 +58,10 @@ namespace TeslaSCAN {
     private double dcCharge;
     private MainActivity mainActivity;
     private double nominalRemaining;
+    private double buffer;
+    private double soc;
 
-        public Parser() {
+    public Parser() {
     }
 
     public Parser(MainActivity mainActivity, CustomAdapter adapter) {
@@ -179,8 +181,11 @@ namespace TeslaSCAN {
       p.AddValue("Expected remaining", "kWh", "r", (bytes) => ((bytes[2] >> 4) + ((bytes[3] & 0x3F) * 16)) * 0.1);
       p.AddValue("Ideal remaining", "kWh", "r", (bytes) => ((bytes[3] >> 6) + ((bytes[4] & 0xFF) * 4)) * 0.1);
       p.AddValue("To charge complete", "kWh", "", (bytes) => (bytes[5] + ((bytes[6] & 0x03) << 8)) * 0.1);
-      p.AddValue("Energy buffer", "kWh", "br", (bytes) => ((bytes[6] >> 2) + ((bytes[7] & 0x03) * 64)) * 0.1);
+      p.AddValue("Energy buffer", "kWh", "br", (bytes) => buffer = ((bytes[6] >> 2) + ((bytes[7] & 0x03) * 64)) * 0.1);
       p.AddValue("SOC nominal", "%", "br", (bytes) => nominalRemaining / nominalFullPackEnergy * 100.0);
+      p.AddValue("SOC", "%", "br", (bytes) => soc = (nominalRemaining - buffer) / (nominalFullPackEnergy - buffer) * 100.0);
+      p.AddValue("Usable full pack", "kWh", "br", (bytes) => (nominalFullPackEnergy-buffer));
+      p.AddValue("Usable remaining", "kWh", "br", (bytes) => (nominalRemaining-buffer));
 
       packets.Add(0x302, p = new Packet(0x302, this));
       p.AddValue("SOC Min", "%", "br", (bytes) => (bytes[0] + ((bytes[1] & 0x3) << 8)) / 10.0);
@@ -309,6 +314,10 @@ namespace TeslaSCAN {
         (bytes) => (bytes[0] + (bytes[1] << 8)) * miles_to_km);
       p.AddValue("Typical range", "km", "br",
         (bytes) => (bytes[2] + (bytes[3] << 8)) * miles_to_km);
+      p.AddValue("Full rated range", "km", "br",
+        (bytes) => (bytes[0] + (bytes[1] << 8)) * miles_to_km / (soc == 0.0 ? 100.0 : soc) * 100.0);
+      p.AddValue("Full typical range", "km", "br",
+        (bytes) => (bytes[2] + (bytes[3] << 8)) * miles_to_km / (soc == 0.0 ? 100.0 : soc) * 100.0);
 
 
 
@@ -600,7 +609,7 @@ namespace TeslaSCAN {
     }
 
 
-      public bool Parse(string input, int idToFind) {
+    public bool Parse(string input, int idToFind) {
       if (!input.Contains('\n'))
         return false;
       if (input.StartsWith(">"))
@@ -645,6 +654,7 @@ namespace TeslaSCAN {
 #endif
           if (bytes.Count == raw.Length) { // try to validate the parsing 
             ParsePacket(line, id, bytes.ToArray());
+            MainActivity.bluetoothHandler.ResetTimeout();
             if (idToFind>0)
               if (idToFind == id)
                 found=true;

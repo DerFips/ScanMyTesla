@@ -19,7 +19,7 @@ using System.IO;
 namespace TeslaSCAN {
 
   [Service]
-  partial class BluetoothHandler : Service {
+  public partial class BluetoothHandler : Service {
 
     IBinder mBinder;
 
@@ -44,7 +44,7 @@ namespace TeslaSCAN {
     private bool runRequest;
     private long recieveTime;
     private long parseTime;
-    private Timer TimeoutTimer;
+    private static Timer timeoutTimer;
 
 #if disablebluetooth
     int pos = 0;
@@ -150,8 +150,8 @@ namespace TeslaSCAN {
     }
 
     public void Initialize() {
-      if (TimeoutTimer==null)
-        TimeoutTimer = new Timer(timeoutCallback, null, 30000, 30000);
+      if (timeoutTimer==null)
+        timeoutTimer = new Timer(timeoutCallback, null, 30000, 30000);
       ThreadPool.QueueUserWorkItem(o => InitializeInternal());
     }
 
@@ -162,8 +162,13 @@ namespace TeslaSCAN {
       }
     }
 
-    private void InitializeInternal() {
+    public void ResetTimeout() {
+       timeoutTimer?.Change(30000, 30000);
+    }
+
+        private void InitializeInternal() {
       try {
+        createHangup = false;
         Stop();
         runRequest = true;
 #if !disablebluetooth
@@ -253,12 +258,10 @@ namespace TeslaSCAN {
 
           s += receive();
 
-          TimeoutTimer?.Change(30000, 30000);
-
           if (loggingEnabled)
             streamWriter.WriteLine(s);
 
-          if (parser.Parse(s, (int)packetIdToFind) && (int)packetIdToFind>0)
+          if (parser.Parse(s, (int)packetIdToFind) && (int)packetIdToFind>0) 
             active = false;
 
           if (s.Contains('>')) {

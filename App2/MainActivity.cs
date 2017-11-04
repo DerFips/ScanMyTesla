@@ -1,6 +1,6 @@
 ﻿/*
 
-Tesla CAN
+Scan My Tesla
 By Amund Børsand
 
 battery cell temperature + voltage decoded by EVTV (correct me if I'm wrong?)
@@ -16,33 +16,38 @@ using Android.Widget;
 using Android.OS;
 using Android.Bluetooth;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Threading;
 using Android.Content;
-using System.IO;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Android.Util;
-using Android.Provider;
-using Android.Database;
 using Android.Support.V4.App;
 using Android.Preferences;
-using Android.Runtime;
 using System.Runtime.Serialization;
+using Microsoft.Azure.Mobile;
+using Microsoft.Azure.Mobile.Analytics;
+using Microsoft.Azure.Mobile.Crashes;
 
-namespace TeslaSCAN {
+namespace TeslaSCAN
+{
+#if disablebluetooth
+  [Activity(
+    Label = "scan my tesla DEMO", 
+    ConfigurationChanges = Android.Content.PM.ConfigChanges.Orientation | 
+                           Android.Content.PM.ConfigChanges.ScreenSize, 
+    MainLauncher = true, Icon = "@drawable/icon")]
+#else
   [Activity(
     Label = "scan my tesla", 
     ConfigurationChanges = Android.Content.PM.ConfigChanges.Orientation | 
                            Android.Content.PM.ConfigChanges.ScreenSize, 
     MainLauncher = true, Icon = "@drawable/icon")]
+#endif
 
   public partial class MainActivity : Activity {
 
     CustomAdapter ladapter;
     GridView gridView1;
     Parser parser;
-    static BluetoothHandler bluetoothHandler;
+    public static BluetoothHandler bluetoothHandler;
     TextView statusText;
     List<ListElement> clipboard = new List<ListElement>();
     public Tab currentTab;
@@ -102,6 +107,9 @@ namespace TeslaSCAN {
 
     protected override async void OnCreate(Bundle bundle) {
       base.OnCreate(bundle);
+
+      MobileCenter.Start("de71b3ad-d8c3-441e-84d9-561b4088f5d3",
+                   typeof(Analytics), typeof(Crashes));
 
       starting = true;
 
@@ -220,15 +228,6 @@ namespace TeslaSCAN {
 
 #if !disablebluetooth
 
-      /*adapter = BluetoothAdapter.DefaultAdapter;
-      if (adapter == null) {         
-        throw new Exception("No bluetooth support!");
-      }
-
-      if (!adapter.IsEnabled) {
-        throw new Exception("Bluetooth adapter is not enabled.");
-      }*/
-
       var storedDevice = prefs.GetString("device", "");
       if (storedDevice == "")
         StartActivityForResult(typeof(DeviceListActivity), 1);
@@ -279,63 +278,74 @@ namespace TeslaSCAN {
 
     }
 
-    private void LoadTabs() {
+    private void LoadTabs()
+    {
       try {
-        string json=prefs.GetString("tabs", "");
+        string json = prefs.GetString("tabs", "");
 
         tabs = Tab.DeSerialize(json);
 
-        foreach (var tab in tabs) {
-          ActionBar.Tab aTab = ActionBar.NewTab();
-          aTab.SetText(tab.name);
-          tab.ActionBarTab = aTab;
+        foreach (var tab in tabs)
+          if (tab.name == "All") {
+            CreateTab("All", "", "0", "1", tab);
+            tab.items = new List<ListElement>();
+          } else {
 
-          Value[] temp=new Value[tab.include.Count];
-          tab.include.CopyTo(temp);
-          tab.include.Clear();
-          foreach (var t in temp)
-            try {
-              tab.items = new List<ListElement>();
-              tab.include.Add(
-                parser
-                  .GetAllValues()
-                  .Where(x => x.name == t.name)
-                  .First());
-            } catch (Exception) { };
+            ActionBar.Tab aTab = ActionBar.NewTab();
+            aTab.SetText(tab.name);
+            tab.ActionBarTab = aTab;
 
-          if (tab.name.Contains("Trip"))
-            trip = tab.trip==null ? tab.trip = new Trip(false) : tab.trip;
+            Value[] temp = new Value[tab.include.Count];
+            tab.include.CopyTo(temp);
+            tab.include.Clear();
+            foreach (var t in temp)
+              try {
+                tab.items = new List<ListElement>();
+                tab.include.Add(
+                  parser
+                    .GetAllValues()
+                    .Where(x => x.name == t.name)
+                    .First());
+              }
+              catch (Exception) { };
 
-          aTab.TabSelected += (sender, args) => {
-            currentTab = tab;
-            if (bluetoothHandler.active)
-              bluetoothHandler.ChangeFilter(currentTab.include);
-            ladapter.items = currentTab.GetItems(parser);
-            ladapter.items.Any(x => x.selected = false);
-            gridView1.NumColumns = currentTab.style == 0 ? 1 : currentTab.size;
-            gridView1.Invalidate();
-            ladapter.NotifyChange();
-            if (!starting) {
-              editor = prefs.Edit();
-              editor.PutString("currentTab", currentTab.name);
-              editor.Commit();
-            }
-          };
-          ActionBar.AddTab(aTab);
-        }
-      } catch (Exception e) { Console.WriteLine(e.ToString()); }
+            if (tab.name.Contains("Trip"))
+              trip = tab.trip == null ? tab.trip = new Trip(false) : tab.trip;
+
+            aTab.TabSelected += (sender, args) => {
+              currentTab = tab;
+              if (bluetoothHandler.active)
+                bluetoothHandler.ChangeFilter(currentTab.include);
+              ladapter.items = currentTab.GetItems(parser);
+              ladapter.items.Any(x => x.selected = false);
+              gridView1.NumColumns = currentTab.style == 0 ? 1 : currentTab.size;
+              gridView1.Invalidate();
+              ladapter.NotifyChange();
+              if (!starting) {
+                editor = prefs.Edit();
+                editor.PutString("currentTab", currentTab.name);
+                editor.Commit();
+              }
+            };
+            ActionBar.AddTab(aTab);
+          }
+      }
+      catch (Exception e) { Console.WriteLine(e.ToString()); }
     }
 
-    private Tab CreateTab(string name, string tag, string gaugeType, string size) {
+    private Tab CreateTab(string name, string tag, string gaugeType, string size, Tab tab=null) {
       ActionBar.Tab aTab = ActionBar.NewTab();
       aTab.SetText(name);
 
-      Tab tab = new Tab(
-        name,
-        aTab,
-        name == "Total" ? new Trip(true) : trip);
+      if (tab == null) {
+        tab = new Tab(
+          name,
+          aTab,
+          name == "Total" ? new Trip(true) : trip);
 
-      tabs.Add(tab);
+        tabs.Add(tab);
+      } else
+        tab.ActionBarTab = aTab;
       tab.include = parser.GetValues(tag);
       tab.size = int.Parse(size);
       tab.style = int.Parse(gaugeType);
