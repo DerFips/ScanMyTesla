@@ -116,13 +116,16 @@ namespace TeslaSCAN
 			public const int bigger = 2131034135;
 			
 			// aapt resource value: 0x7f05001f
-			public const int bluetoothEnabled = 2131034143;
+			public const int blank = 2131034143;
+			
+			// aapt resource value: 0x7f050021
+			public const int bluetoothEnabled = 2131034145;
 			
 			// aapt resource value: 0x7f050013
 			public const int bottom = 2131034131;
 			
-			// aapt resource value: 0x7f050022
-			public const int browse = 2131034146;
+			// aapt resource value: 0x7f050024
+			public const int browse = 2131034148;
 			
 			// aapt resource value: 0x7f050014
 			public const int copy = 2131034132;
@@ -133,11 +136,11 @@ namespace TeslaSCAN
 			// aapt resource value: 0x7f050011
 			public const int delete = 2131034129;
 			
-			// aapt resource value: 0x7f05001c
-			public const int deletetab = 2131034140;
+			// aapt resource value: 0x7f05001d
+			public const int deletetab = 2131034141;
 			
-			// aapt resource value: 0x7f05001e
-			public const int device = 2131034142;
+			// aapt resource value: 0x7f050020
+			public const int device = 2131034144;
 			
 			// aapt resource value: 0x7f05000c
 			public const int gridView1 = 2131034124;
@@ -154,11 +157,14 @@ namespace TeslaSCAN
 			// aapt resource value: 0x7f05000e
 			public const int menuIcon = 2131034126;
 			
-			// aapt resource value: 0x7f050020
-			public const int metric = 2131034144;
+			// aapt resource value: 0x7f050022
+			public const int metric = 2131034146;
 			
 			// aapt resource value: 0x7f050004
 			public const int new_devices = 2131034116;
+			
+			// aapt resource value: 0x7f05001c
+			public const int newtab = 2131034140;
 			
 			// aapt resource value: 0x7f05001a
 			public const int newtrip = 2131034138;
@@ -166,8 +172,8 @@ namespace TeslaSCAN
 			// aapt resource value: 0x7f050002
 			public const int paired_devices = 2131034114;
 			
-			// aapt resource value: 0x7f05001d
-			public const int paste = 2131034141;
+			// aapt resource value: 0x7f05001e
+			public const int paste = 2131034142;
 			
 			// aapt resource value: 0x7f05000f
 			public const int prefIcon = 2131034127;
@@ -175,8 +181,8 @@ namespace TeslaSCAN
 			// aapt resource value: 0x7f050005
 			public const int relativeLayout1 = 2131034117;
 			
-			// aapt resource value: 0x7f050021
-			public const int resettabs = 2131034145;
+			// aapt resource value: 0x7f050023
+			public const int resettabs = 2131034147;
 			
 			// aapt resource value: 0x7f05001b
 			public const int resettrip = 2131034139;
@@ -265,7 +271,10 @@ namespace TeslaSCAN
 			public const int OptionsMenu = 2131230723;
 			
 			// aapt resource value: 0x7f080004
-			public const int Wrench = 2131230724;
+			public const int TabsMenu = 2131230724;
+			
+			// aapt resource value: 0x7f080005
+			public const int Wrench = 2131230725;
 			
 			static Menu()
 			{

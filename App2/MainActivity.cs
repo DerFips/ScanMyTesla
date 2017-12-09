@@ -22,9 +22,6 @@ using System.Collections.Generic;
 using Android.Support.V4.App;
 using Android.Preferences;
 using System.Runtime.Serialization;
-using Microsoft.Azure.Mobile;
-using Microsoft.Azure.Mobile.Analytics;
-using Microsoft.Azure.Mobile.Crashes;
 
 namespace TeslaSCAN
 {
@@ -74,7 +71,22 @@ namespace TeslaSCAN
 
     private bool starting;
     public bool flagNewTrip;
+    private ImageView menuIcon;
+    private ImageView prefIcon;
+
     //private Timer LogTimer;
+
+    string[,] tabTitle = new string[,] {
+        {"All","","0","1" },
+        {"Perf","p","1","2" },
+        {"Temps","c","0","1" },
+        {"Battery","b","0","1" },
+        {"HVAC","h","0","1" },
+        {"Cells","z","1","2" },
+        //{"Total","t","0","1" },
+        {"Trip","t","2","2" }
+      };
+
 
     public void LogStatus(string s) {
       RunOnUiThread(()=>{
@@ -108,9 +120,6 @@ namespace TeslaSCAN
     protected override async void OnCreate(Bundle bundle) {
       base.OnCreate(bundle);
 
-      MobileCenter.Start("de71b3ad-d8c3-441e-84d9-561b4088f5d3",
-                   typeof(Analytics), typeof(Crashes));
-
       starting = true;
 
 #if disablebluetooth
@@ -118,7 +127,7 @@ namespace TeslaSCAN
                     //inputStream = Assets.Open("RawLog 2017-02-02 17-00-34.txt"); // fra model X
                     //inputStream = Assets.Open("RawLog 2017-01-19 16-30.txt");
                     //inputStream = Assets.Open("RawLog 2017-01-19 08-32.txt");
-            inputStream = Assets.Open("RawLog 2017-06-04 18-17-36.txt");
+            inputStream = Assets.Open("RawLog 2017-12-03 23-46-09.txt");
             //inputStream = Assets.Open("RawLog 2017-04-19 07-55-34.txt");
             //inputStream = Assets.Open("RawLog 2017-05-30 16-17-44 kun 210-pakker.txt");
       //inputStream = Assets.Open("RawLog 2017-05-05 15-18-10.txt"); // this one has only battery amps, but with errors!
@@ -163,7 +172,7 @@ namespace TeslaSCAN
       statusText.Text = "";
 
       // initalize menu
-      var menuIcon = FindViewById<ImageView>(Resource.Id.menuIcon);
+      menuIcon = FindViewById<ImageView>(Resource.Id.menuIcon);
       PopupMenu menu = new PopupMenu(this, menuIcon);
       menu.Inflate(Resource.Menu.OptionsMenu);
       //menu.Menu.FindItem(Resource.Id.selectionMode).SetCheckable(true);
@@ -174,7 +183,7 @@ namespace TeslaSCAN
       menuIcon.Clickable = true;
       menu.MenuItemClick += Menu_MenuItemClick;
 
-      var prefIcon = FindViewById<ImageView>(Resource.Id.prefIcon);
+      prefIcon = FindViewById<ImageView>(Resource.Id.prefIcon);
       PopupMenu prefMenu = new PopupMenu(this, prefIcon);
       prefMenu.Inflate(Resource.Menu.Wrench);
       //menu.Menu.FindItem(Resource.Id.selectionMode).SetCheckable(true);
@@ -276,6 +285,9 @@ namespace TeslaSCAN
       /*if (LogTimer == null)
         LogTimer = new Timer(LogTimerCallback, null, 2000, 200);*/
 
+      //SupportFunctions.Version = context.PackageManager.GetPackageInfo(context.PackageName, 0).VersionName;
+      //prefs.GetInt("")
+
     }
 
     private void LoadTabs()
@@ -372,15 +384,6 @@ namespace TeslaSCAN
 
     private void CreateDefaultTabs() {
       flagNewTrip = true; // to save the first trip
-      string[,] tabTitle = new string[,] {
-        {"All","","0","1" },
-        {"Perf","p","1","2" },
-        {"Temps","c","0","1" },
-        {"Battery","b","0","1" },
-        {"Cells","z","1","2" },
-        //{"Total","t","0","1" },
-        {"Trip","t","2","2" }
-      };
 
       for (int i = 0; i < tabTitle.GetLength(0); i++) {
         CreateTab(tabTitle[i, 0], tabTitle[i, 1], tabTitle[i, 2], tabTitle[i, 3]);
@@ -585,7 +588,9 @@ namespace TeslaSCAN
           return;
         case Resource.Id.resettrip:
           parser.ResetTrip();
-          SaveTabs();
+          flagNewTrip = true;
+          ActionBar.SelectTab(currentTab.ActionBarTab);
+          //SaveTabs();
           //verifyStoragePermissions();
           //parser.SaveTrip(filePath);
           return;
@@ -601,6 +606,28 @@ namespace TeslaSCAN
           flagNewTrip = true;
           ActionBar.SelectTab(newTab.ActionBarTab);
           //SaveTabs();
+          return;
+        case Resource.Id.newtab:
+          PopupMenu menu = new PopupMenu(this, menuIcon);
+          menu.Inflate(Resource.Menu.TabsMenu);
+          for (int i = 0; i < tabTitle.GetLength(0); i++)
+            if (tabTitle[i,0]!="Trip")
+              menu.Menu.Add(tabTitle[i, 0]);
+          
+          menu.MenuItemClick += (s1, arg1) => {
+            if (arg1.Item.TitleFormatted.ToString() == "Blank") {
+              newTab = CreateTab("New", "0", "0", "1");
+              ActionBar.SelectTab(newTab.ActionBarTab);
+            } else
+              for (int i = 0; i < tabTitle.GetLength(0); i++)
+                if (tabTitle[i, 0] == arg1.Item.TitleFormatted.ToString()) {
+                  newTab = CreateTab(tabTitle[i, 0], tabTitle[i, 1], tabTitle[i, 2], tabTitle[i, 3]);
+                  ActionBar.SelectTab(newTab.ActionBarTab);
+                  break;
+                }
+          };
+          menu.Show();
+          SaveTabs();
           return;
         case Resource.Id.deletetab:
           //var pos = tabs.IndexOf(currentTab);

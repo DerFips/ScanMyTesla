@@ -244,6 +244,9 @@ namespace TeslaSCAN {
         string command =
           stCommands ? "STM" : "ATMA";
 
+        /*if (loggingEnabled && stCommands)
+          command="STMA";*/
+
         send(command);
         int pos = 0;
         while (active) {

@@ -7,3 +7,7 @@
 /App2/obj
 /packages
 /BitShiftTest/obj
+/$tf
+/.vs
+/BitShiftTest/bin/SimulatorRel
+/BuildProcessTemplates

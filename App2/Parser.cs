@@ -20,6 +20,19 @@ namespace TeslaSCAN {
     public ConcurrentDictionary<string, ListElement> items;
     SortedList<int, Packet> packets;
     public List<List<ListElement>> ignoreList;
+    bool metric=true;
+    long time; // if I was faster I'd use 'short time'.... :)
+    int numUpdates;
+    int numCells;
+    public char[] tagFilter;
+    private bool fastLogEnabled;
+    private StreamWriter fastLogStream;
+    private List<Value> fastLogItems;
+    char separator = ',';
+    Stopwatch logTimer;
+    private MainActivity mainActivity;
+
+
     public const double miles_to_km = 1.609344;
     public const double kw_to_hp = 1.34102209;
     public const double nm_to_ftlb = 0.737562149;
@@ -38,16 +51,7 @@ namespace TeslaSCAN {
     double tripDistance;
     double charge;
     double discharge;
-    bool metric=true;
-    long time; // if I was faster I'd use 'short time'.... :)
-    int numUpdates;
-    int numCells;
-    public char[] tagFilter;
-    private bool fastLogEnabled;
-    private StreamWriter fastLogStream;
-    private List<Value> fastLogItems;
-    char separator = ',';
-    Stopwatch logTimer;
+
     private double frTorque;
     private double dcChargeTotal;
     private double acChargeTotal;
@@ -56,10 +60,18 @@ namespace TeslaSCAN {
     private double regen;
     private double acCharge;
     private double dcCharge;
-    private MainActivity mainActivity;
     private double nominalRemaining;
     private double buffer;
     private double soc;
+    private double fl;
+    private double fr;
+    private double rl;
+    private double rr;
+    private int frpm;
+    private int rrpm;
+    private bool feet;
+    private bool seat;
+    private bool win;
 
     public Parser() {
     }
@@ -182,14 +194,14 @@ namespace TeslaSCAN {
       p.AddValue("Ideal remaining", "kWh", "r", (bytes) => ((bytes[3] >> 6) + ((bytes[4] & 0xFF) * 4)) * 0.1);
       p.AddValue("To charge complete", "kWh", "", (bytes) => (bytes[5] + ((bytes[6] & 0x03) << 8)) * 0.1);
       p.AddValue("Energy buffer", "kWh", "br", (bytes) => buffer = ((bytes[6] >> 2) + ((bytes[7] & 0x03) * 64)) * 0.1);
-      p.AddValue("SOC nominal", "%", "br", (bytes) => nominalRemaining / nominalFullPackEnergy * 100.0);
+      //p.AddValue("SOC nominal", "%", "br", (bytes) => nominalRemaining / nominalFullPackEnergy * 100.0);
       p.AddValue("SOC", "%", "br", (bytes) => soc = (nominalRemaining - buffer) / (nominalFullPackEnergy - buffer) * 100.0);
       p.AddValue("Usable full pack", "kWh", "br", (bytes) => (nominalFullPackEnergy-buffer));
       p.AddValue("Usable remaining", "kWh", "br", (bytes) => (nominalRemaining-buffer));
 
       packets.Add(0x302, p = new Packet(0x302, this));
-      p.AddValue("SOC Min", "%", "br", (bytes) => (bytes[0] + ((bytes[1] & 0x3) << 8)) / 10.0);
-      p.AddValue("SOC UI", "%", "br", (bytes) => ((bytes[1] >> 2) + ((bytes[2] & 0xF) << 6)) / 10.0);
+      //p.AddValue("SOC Min", "%", "br", (bytes) => (bytes[0] + ((bytes[1] & 0x3) << 8)) / 10.0);
+      //p.AddValue("SOC UI", "%", "br", (bytes) => ((bytes[1] >> 2) + ((bytes[2] & 0xF) << 6)) / 10.0);
 
       p.AddValue("DC Charge total", "kWH", "bs",
             (bytes) => {
@@ -290,12 +302,12 @@ namespace TeslaSCAN {
 
       packets.Add(0x115, p = new Packet(0x115, this));
       p.AddValue("Fr motor RPM", "RPM", "",
-          (bytes) => (bytes[4] + (bytes[5] << 8)) - (512 * (bytes[5] & 0x80)));
+          (bytes) => frpm = (bytes[4] + (bytes[5] << 8)) - (512 * (bytes[5] & 0x80)));
       // 0x115 --- DIS_motorRPM = (data[4] + (data[5]<<8)) - (512 * (data[5]&0x80));
 
       packets.Add(0x106, p = new Packet(0x106, this));
       p.AddValue("Rr motor RPM", "RPM", "",
-          (bytes) => (bytes[4] + (bytes[5] << 8)) - (512 * (bytes[5] & 0x80)));
+          (bytes) => rrpm = (bytes[4] + (bytes[5] << 8)) - (512 * (bytes[5] & 0x80)));
 
       packets.Add(0x232, p = new Packet(0x232, this));
       p.AddValue("Max discharge power", "kW", "b", (bytes) => (bytes[2] + (bytes[3] << 8)) / 100.0);
@@ -303,7 +315,7 @@ namespace TeslaSCAN {
 
       packets.Add(0x168, p = new Packet(0x168, this));
       p.AddValue("Brake pedal", "%", "i",
-          (bytes) => (((bytes[0] + ((bytes[1] & 0x03) << 8)) - 170.0) / (880.0 - 170.0) * 100.0));
+          (bytes) => (bytes[0] + (bytes[1] << 8)) - 3239);
 
       packets.Add(0x00E, p = new Packet(0x00E, this));
       p.AddValue("Steering angle", "deg", "i",
@@ -332,7 +344,7 @@ namespace TeslaSCAN {
               , "z"
               , bytes[0]
               , ((data >> ((14 * i) + 8)) & 0x3FFF) * 0.000305
-              , p.id);
+              , 0x6F2);
           if (cell > numCells)
             numCells = cell;
         } else
@@ -342,7 +354,8 @@ namespace TeslaSCAN {
               , "c"
               , bytes[0]
               , ((Int16)(((data >> ((14 * i) + 6)) & 0xFFFC)) * 0.0122 / 4.0)
-              , p.id);
+              , 0x6F2);
+
         return bytes[0];
       });
 
@@ -364,7 +377,166 @@ namespace TeslaSCAN {
           , "zCC"
           , "c"
           , null);
+
+
+      /*packets.Add(0x222, p = new Packet(0x222, this));
+      p.AddValue("Charge rate", "??", "e",
+        (bytes) => (bytes[0] + (bytes[1] << 8)) / 100.0);
+      p.AddValue("Charger volt", "V", "e",
+        (bytes) => (bytes[2] + (bytes[3] << 8)) / 100.0);*/
+
+
+      packets.Add(0x2A8, p = new Packet(0x2A8, this));
+      p.AddValue("Front left", "WRPM", "p",
+        (bytes) => fl = (bytes[4] + (bytes[3] << 8)) * 0.7371875 / 9.73);
+      p.AddValue("Front right", "WRPM", "p",
+        (bytes) => fr = (bytes[6] + (bytes[5] << 8)) * 0.7371875 / 9.73);
+      p.AddValue("Front drive ratio", ":1", "",
+        (bytes) => frpm > 1000 ? frpm / ((fl + fr) / 2) : bytes[100],
+        new int[] { 0x115 });
+
+
+      packets.Add(0x288, p = new Packet(0x288, this));
+      p.AddValue("Rear left", "WRPM", "p",
+        (bytes) => rl = (bytes[4] + (bytes[3] << 8)) * 0.7371875 / 9.73);
+      p.AddValue("Rear right", "WRPM", "p",
+        (bytes) => rr = (bytes[7] + (bytes[6] << 8)) * 0.7371875 / 9.73);
+      p.AddValue("Rear drive ratio", ":1", "",
+        (bytes) => rrpm > 1000 ? rrpm / ((rl + rr) / 2) : bytes[100],
+        new int[] { 0x106 });
+
+      packets.Add(0x318, p = new Packet(0x318, this));
+      p.AddValue("Outside temp", " C", "h",
+        (bytes) => (bytes[0] / 2.0 - 40));
+      p.AddValue("Outside temp filtered", " C", "h",
+        (bytes) => (bytes[1] / 2.0 - 40));
+      p.AddValue("Inside temp", " C", "h",
+        (bytes) => (bytes[2] / 2.0 - 40));
+      p.AddValue("A/C air temp", " C", "h",
+        (bytes) => (bytes[4] / 2.0 - 40));
+      //318 - temperaturer. 0, 1, 2, 4:  / 2 - 40 = C
+
+
+      packets.Add(0x2AA, p = new Packet(0x2AA, this));
+      p.AddValue("HVAC floor", "0", "h",
+          (bytes) => {
+            var set1 = bytes[2] & 0x07;
+            feet = false;
+            seat = false;
+            win = false;
+            switch (set1) {
+              case 1:
+                seat = true;
+                break;
+              case 2:
+                feet = true;
+                seat = true;
+                break;
+              case 3:
+                feet = true;
+                break;
+              case 4:
+                feet = true;
+                win = true;
+                break;
+              case 5:
+                win = true;
+                break;
+              case 6:
+                feet = true;
+                seat = true;
+                win = true;
+                break;
+              case 7:
+                seat = true;
+                win = true;
+                break;
+            }
+            return feet ? 1 : 0;
+          });
+      p.AddValue("HVAC mid", "0", "h",
+          (bytes) => seat ? 1 : 0);
+      p.AddValue("HVAC window", "0", "h",
+          (bytes) => win ? 1 : 0);
+
+      /*p.AddValue("HVAC recycle", "0", "eh",
+          (bytes) => {
+            return (bytes[3] & 0x10) >> 4;
+          });
+      p.AddValue("HVAC recycle2", "0", "eh",
+          (bytes) => {
+            return (bytes[3] & 0x8) >> 3;
+          });*/
+      p.AddValue("HVAC A/C", "0", "h",
+          (bytes) => {
+            var set3 = bytes[4] & 0x01;
+            return set3;
+          });
+      p.AddValue("HVAC on/off", "0", "h",
+          (bytes) =>
+             (bytes[3] & 0x10) >> 4 == 0 ? 1 : 0);
+
+      p.AddValue("HVAC fan speed", "X", "h",
+          (bytes) => (bytes[2] & 0xf0) >> 4);
+
+      p.AddValue("HVAC temp left", " C", "h",
+          (bytes) => bytes[0] / 2.0);
+      p.AddValue("HVAC temp right", " C", "h",
+          (bytes) => bytes[1] / 2.0);
+
+
+
+      packets.Add(0x3F8, p = new Packet(0x3F8, this));
+      p.AddValue("Win L", " C", "h",
+        (bytes) => ((bytes[4] + (bytes[5] << 8)) / 40.0));
+      p.AddValue("Win R", " C", "h",
+        (bytes) => ((bytes[6] + (bytes[7] << 8)) / 40.0));
+      p.AddValue("Mid L", " C", "h",
+        (bytes) => ((bytes[0] + (bytes[1] << 8)) / 40.0));
+      p.AddValue("Mid R", " C", "h",
+        (bytes) => ((bytes[2] + (bytes[3] << 8)) / 40.0));
+      //3F8 - as int. tror dette er 4 tempavlesninger evt innblåstemperatur, F / 10->C
+
+      packets.Add(0x388, p = new Packet(0x388, this));
+      p.AddValue("Floor L", " C", "h",
+        (bytes) => (bytes[1] / 4.0));
+      p.AddValue("Floor R", " C", "h",
+        (bytes) => (bytes[0] / 4.0));
+      p.AddValue("Temp 1", " C", "h",
+        (bytes) => (bytes[2] / 4.0));
+      p.AddValue("Temp 2", " C", "h",
+        (bytes) => (bytes[3] / 4.0));
+      p.AddValue("Temp 3", " C", "h",
+        (bytes) => (bytes[4] / 4.0));
+      p.AddValue("Temp 4", " C", "h",
+        (bytes) => (bytes[5] / 4.0));
+      //388 - temperaturer!0 - 1: / 4 = C, 2,3,4,5: / 2 - 40 = C
+
+      packets.Add(0x308, p = new Packet(0x308, this));
+      p.AddValue("Louver 1", "b", "h",
+        (bytes) => (bytes[0]));
+      p.AddValue("Louver 2", "b", "h",
+        (bytes) => (bytes[1]));
+      p.AddValue("Louver 3", "b", "h",
+        (bytes) => (bytes[2]));
+      p.AddValue("Louver 4", "b", "h",
+        (bytes) => (bytes[3]));
+      p.AddValue("Louver 5", "b", "h",
+        (bytes) => (bytes[4]));
+      p.AddValue("Louver 6", "b", "h",
+        (bytes) => (bytes[5]));
+      p.AddValue("Louver 7", "b", "h",
+        (bytes) => (bytes[6]));
+      p.AddValue("Louver 8", "b", "h",
+        (bytes) => (bytes[7]));
+      //388 - temperaturer!0 - 1: / 4 = C, 2,3,4,5: / 2 - 40 = C
+
+
+
+
     }
+
+
 
     public List<Value> GetAllValues() {
       List<Value> result = new List<TeslaSCAN.Value>();

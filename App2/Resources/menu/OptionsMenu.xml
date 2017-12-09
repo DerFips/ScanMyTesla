@@ -26,6 +26,8 @@
         android:title="New trip" />
   <item android:id="@+id/resettrip"
         android:title="Reset trip" />
+  <item android:id="@+id/newtab"
+        android:title="New tab" />
   <item android:id="@+id/deletetab"
         android:title="Delete tab" />
   <item android:id="@+id/paste"
