@@ -46,10 +46,12 @@ namespace TeslaSCAN {
       return name;
     }
 
-    public Value(string name, string unit, string tag, Func<byte[], double> formula, List<int> packetId) {
+    public Value(string name, string unit, string tag, Func<byte[], double> formula, List<int> packetId, int index) {
       this.name = name;
       this.unit = unit;
-      this.index = count++;
+      if (index == -1)
+        this.index = count++;
+      else this.index = index;
       this.formula = formula;
       this.tag = tag;
       this.packetId = packetId;

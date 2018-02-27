@@ -26,7 +26,7 @@ namespace TeslaSCAN {
     [DataMember]
     public int size=1;
     [DataMember]
-    public int style = 0; // 0=bar/text, 1=gauge
+    public int style = 0; // 0=bar/text, 1=gauge, 2=battery block
     [DataMember]
     public Trip trip;
 

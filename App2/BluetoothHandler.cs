@@ -35,7 +35,6 @@ namespace TeslaSCAN {
     bool stCommands = false;
     bool startup = false;
     Thread thread;
-    Timer timer;
     public bool verbose;
     public bool createHangup;
     private StreamWriter streamWriter;
@@ -45,6 +44,8 @@ namespace TeslaSCAN {
     private long recieveTime;
     private long parseTime;
     private static Timer timeoutTimer;
+    System.IO.Stream inputStream;
+
 
 #if disablebluetooth
     int pos = 0;
@@ -95,11 +96,13 @@ namespace TeslaSCAN {
           s += System.Text.Encoding.ASCII.GetString(buffer, 0, x).Replace('\r', '\n');
         }
 #else
-          s += (char) mainActivity.inputStream.ReadByte();
+          /*if (!inputStream.IsDataAvailable())
+            inputStream.Seek(0, SeekOrigin.Begin );*/
+          s += (char) inputStream.ReadByte();
           if (createHangup)
           while (true) ;
         }
-        Thread.Sleep(1);
+        //Thread.Sleep(1);
 #endif
 /*#if DEBUG
         Console.WriteLine(s);
@@ -111,7 +114,7 @@ namespace TeslaSCAN {
     public int sendCommand(string command, string pass=">", string fail="") {
       string s = "";
       int retries = 0;
-      try {
+      //try {
         do {
           if (verbose)
             mainActivity.LogStatus(command);
@@ -131,7 +134,7 @@ namespace TeslaSCAN {
           return -1;
         else return 0; // contains pass
 
-      } catch (TimeoutException) {
+      /*} catch (TimeoutException) {
         mainActivity.LogStatus("Timeout, retrying "+recursionDepth);
         Thread.Sleep(2000);
         recursionDepth++;
@@ -141,7 +144,7 @@ namespace TeslaSCAN {
           recursionDepth = 0;
           return -2; // 
         }
-      }
+      }*/
     }
 
     public void Initialize(BluetoothDevice device) {
@@ -157,6 +160,7 @@ namespace TeslaSCAN {
 
     private void timeoutCallback(object state) {
       if (runRequest) {
+        mainActivity.ClearLog();
         mainActivity.LogStatus("Timeout");
         ThreadPool.QueueUserWorkItem(o => InitializeInternal());
       }
@@ -166,11 +170,36 @@ namespace TeslaSCAN {
        timeoutTimer?.Change(30000, 30000);
     }
 
-        private void InitializeInternal() {
+    private void InitializeInternal() {
       try {
         createHangup = false;
         Stop();
         runRequest = true;
+
+#if disablebluetooth
+
+        inputStream = mainActivity. Assets.Open("RawLog 2017-12-03 23-46-09.txt");
+        //inputStream = mainActivity.Assets.Open("RawLog 2017-01-19 08-32.txt");
+        //inputStream = Assets.Open("RawLog 2017-02-02 17-00-34.txt");
+        //inputStream = Assets.Open("RawLog 2017-02-19 14-09-07.txt");
+        //inputStream = Assets.Open("RawLog 2017-04-19 07-55-34.txt");
+        //inputStream = Assets.Open("RawLog 2017-06-04 18-17-36.txt");
+        //inputStream = Assets.Open("RawLog 2017-12-03 23-46-09.txt");
+        //inputStream = Assets.Open("RawLog.2017-09-17.21-10-56 P100D.txt");
+        //inputStream = mainActivity. Assets.Open("RawLog 2018-01-27 15-33-36.txt");
+        //inputStream = mainActivity.Assets.Open("RawLog 2018-01-27 15-48-09.txt");
+
+        //inputStream = mainActivity. Assets.Open("RawLog.2017-09-17.21-10-56 P100D.txt");
+        //inputStream = mainActivity.Assets.Open("RawLog 2017-02-02 17-00-34.txt"); // fra model X
+        //inputStream = Assets.Open("RawLog 2017-01-19 16-30.txt");
+        //inputStream = Assets.Open("RawLog 2017-01-19 08-32.txt");
+        //inputStream = mainActivity.Assets.Open("RawLog 2017-12-03 23-46-09.txt");
+        //inputStream = Assets.Open("RawLog 2017-04-19 07-55-34.txt");
+        //inputStream = Assets.Open("RawLog 2017-05-30 16-17-44 kun 210-pakker.txt");
+        //inputStream = Assets.Open("RawLog 2017-05-05 15-18-10.txt"); // this one has only battery amps, but with errors!
+        //inputStream = Assets.Open("RawLog 2017-05-05 15-06-47.txt"); // this one with errors!
+#endif
+
 #if !disablebluetooth
         mainActivity.LogStatus("Creating bluetooth socket...");
         _socket = device.CreateInsecureRfcommSocketToServiceRecord(Java.Util.UUID.FromString("00001101-0000-1000-8000-00805f9b34fb"));
@@ -344,6 +373,10 @@ namespace TeslaSCAN {
       else if (param is string[])
         s = (string[])param;
       else 
+        // With ELM327, removes the values tagged "i"
+        // this was designed to make the trip tabs work
+        // it disables the charge counters from updating,
+        // narrows the filters so the distance (odometer packet) can be read
         if (!stCommands) { 
         List<Value> newList = new List<Value>();
         foreach (var p in (List<Value>)param)
@@ -363,7 +396,7 @@ namespace TeslaSCAN {
         sendCommand("ATCF " + s[1].ToUpper().PadLeft(3, '0'), "OK");
       }
 
-      int mask = Convert.ToInt32(s[0], 16);
+      //int mask = Convert.ToInt32(s[0], 16);
       //mainActivity.ChangeTitle(Convert.ToString(mask, 2).PadLeft(11, '0'));
 
       if (!startup)

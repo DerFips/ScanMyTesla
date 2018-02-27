@@ -48,7 +48,7 @@ namespace TeslaSCAN {
     public double Convert(double val, bool convertToImperial) {
       if (!convertToImperial)
         return val;
-      if (unit.ToUpper() == "C" || unit == "zCC")
+      if (unit.Trim().ToUpper() == "C" || unit == "zCC")
         return val * 1.8 + 32;
       if (unit == "Nm")
         return val * Parser.nm_to_ftlb;
@@ -60,9 +60,14 @@ namespace TeslaSCAN {
     }
 
     public string GetUnit(bool convertToImperial) {
-      if (!convertToImperial)
+      if (unit == "zVC")
+        return "V";
+      if (!convertToImperial) {
+        if (unit == "zCC")
+          return "C";
         return unit;
-      if (unit.ToUpper() == "C" || unit == "zCC")
+      }
+      if (unit.Trim().ToUpper() == "C" || unit == "zCC")
         return "F";
       if (unit == "Nm")
         return "LbFt";

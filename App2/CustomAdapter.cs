@@ -77,19 +77,24 @@ namespace TeslaSCAN {
         item.viewType = 1;
       else
         item.viewType = ((MainActivity)context).currentTab.style*2;
+      if (((MainActivity)context).currentTab.style == 3)
+        item.viewType = 5;
       if (view == null ||
          (int)view.Tag != item.viewType) { // no view to re-use, create new
-        if (item.viewType == 0) 
-          view = context.LayoutInflater.Inflate(Resource.Layout.ListItem, null);                  
-        if (item.viewType == 1)
-          view = context.LayoutInflater.Inflate(Resource.Layout.ListItem2, null);
-        if (item.viewType > 1) {
-          view = context.LayoutInflater.Inflate(Resource.Layout.ListItemGauge, null);
-          //view.FindViewById<TextView>(Resource.Id.textView2).SetHeight(view.Width);
-          //view.LayoutParameters.Height = view.FindViewById(Resource.Id.relativeLayout1).Width;
-        }
 
-          item.changed = true;
+        if (item.viewType == 0)
+          view = context.LayoutInflater.Inflate(Resource.Layout.ListItem, null);
+        if (item.viewType == 1)
+          //view = context.LayoutInflater.Inflate(Resource.Layout.ListItemBattery, null);
+          view = context.LayoutInflater.Inflate(Resource.Layout.ListItem2, null);
+        if (item.viewType == 2 || item.viewType == 4)
+          view = context.LayoutInflater.Inflate(Resource.Layout.ListItemGauge, null);
+        //view.FindViewById<TextView>(Resource.Id.textView2).SetHeight(view.Width);
+        //view.LayoutParameters.Height = view.FindViewById(Resource.Id.relativeLayout1).Width;
+        if (item.viewType == 5)
+          view = context.LayoutInflater.Inflate(Resource.Layout.ListItemBattery, null);
+
+        item.changed = true;
       }
 
 
@@ -104,12 +109,26 @@ namespace TeslaSCAN {
           return view;
         string str;
 
-        switch (item.selected) {
-          case false: view.FindViewById<TextView>(Resource.Id.textView1).Text = item.name; break;
-          case true:
-            view.FindViewById<TextView>(Resource.Id.textView1).Text = item.name +
-        " (" + item.GetMin(convertToImperial).ToString("0.0") + "/" + item.GetMax(convertToImperial).ToString("0.0") + ")"; break;
-        }
+        if (item.viewType != 5)
+          switch (item.selected) {
+            case false: view.FindViewById<TextView>(Resource.Id.textView1).Text = item.name; break;
+            case true:
+              view.FindViewById<TextView>(Resource.Id.textView1).Text = item.name +
+          " (" + item.GetMin(convertToImperial).ToString("0.0") + "/" + item.GetMax(convertToImperial).ToString("0.0") + ")"; break;
+          } else
+          if (item.index < 2000) {
+          view.FindViewById<TextView>(Resource.Id.textView4).Text = item.name;
+          view.FindViewById<TextView>(Resource.Id.textView4).Visibility = ViewStates.Visible;
+        } else
+        if ((position / 4) % 2 == 0) {
+          if (position % 4 == 0)
+            view.FindViewById<TextView>(Resource.Id.textView4).Text = "Module " + ((item.index - 2000) / 6 + 1);
+          else
+            view.FindViewById<TextView>(Resource.Id.textView4).Text = "";
+          view.FindViewById<TextView>(Resource.Id.textView4).Visibility = ViewStates.Visible;
+        } else view.FindViewById<TextView>(Resource.Id.textView4).Visibility = ViewStates.Gone;
+
+
 
         if (item.unit.ToUpper().Contains("VC"))
           str = "0.000";
@@ -122,16 +141,10 @@ namespace TeslaSCAN {
         var progress = view.FindViewById<ProgressBar>(Resource.Id.ProgressBar1);
 
         view.FindViewById<TextView>(Resource.Id.textView2).Text = val.ToString(str);
-        if (item.viewType != 1)
+        if (item.viewType != 5 &&
+            item.viewType != 1)
           view.FindViewById<TextView>(Resource.Id.textView3).Text = item.GetUnit(convertToImperial);
-        if (item.viewType == 0) {
-          view.FindViewById<TextView>(Resource.Id.textView2).SetTextSize(Android.Util.ComplexUnitType.Pt, ((MainActivity)context).currentTab.size*10);
-          progress.LayoutParameters.Height = view.FindViewById<TextView>(Resource.Id.textView2).Height-2;
-            //((MainActivity)context).currentTab.size * 50;
-        }
 
-        /*if (convertToImperial)
-          val = item.GetValue(false);*/
         var min = item.GetGlobalMin(convertToImperial);
         var max = item.GetGlobalMax(convertToImperial);
         var span = -min + max;
@@ -139,7 +152,27 @@ namespace TeslaSCAN {
         if (min < 0)
           zero = 0;
 
-        if (item.viewType > 1 && span > 0) {
+        if (item.viewType == 5) {
+          view.FindViewById<TextView>(Resource.Id.textView2).Text += " " + item.GetUnit(convertToImperial);
+          if (val == items.ElementAt(0).GetValue(convertToImperial) ||
+              val == items.ElementAt(4).GetValue(convertToImperial))
+            view.FindViewById<TextView>(Resource.Id.textView2).SetTextColor(Color.Blue);
+          else 
+          if (val == items.ElementAt(2).GetValue(convertToImperial) ||
+              val == items.ElementAt(6).GetValue(convertToImperial))
+            view.FindViewById<TextView>(Resource.Id.textView2).SetTextColor(Color.Red);
+          else
+            view.FindViewById<TextView>(Resource.Id.textView2).SetTextColor(Color.LightGray);
+        }
+
+        if (item.viewType == 0) {
+          view.FindViewById<TextView>(Resource.Id.textView2).SetTextSize(Android.Util.ComplexUnitType.Pt, ((MainActivity)context).currentTab.size*10);
+          progress.LayoutParameters.Height = view.FindViewById<TextView>(Resource.Id.textView2).Height-2;
+            //((MainActivity)context).currentTab.size * 50;
+        }
+
+
+        if (item.viewType > 1 && item.viewType < 5 && span > 0) {
 
           ArcView g = (ArcView) view.FindViewById(Resource.Id.arcView1);
           if (item.selected)
@@ -160,9 +193,6 @@ namespace TeslaSCAN {
 
             g.negative = val < 0;
           
-          //g.
-
-          //if (item.changed)
             g.Invalidate();
         }
 

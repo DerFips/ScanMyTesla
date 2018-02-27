@@ -18,11 +18,6 @@ namespace TeslaSCAN {
     private Paint mPaints;
     private Paint mPaints2;
     private Paint mFramePaint;
-    private float mStart;
-    private float mSweep;
-    private int mBigIndex;
-    private static float SWEEP_INC = 2;
-    private static float START_INC = 15;
 
     public float angle;
     public bool negative;

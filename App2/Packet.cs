@@ -23,13 +23,13 @@ namespace TeslaSCAN {
       this.parser = parser;
       values = new List<Value>();
     }
-    public void AddValue(string name, string unit, string tag, Func<byte[], double> formula, int[] additionalPackets = null) {
+    public void AddValue(string name, string unit, string tag, Func<byte[], double> formula, int[] additionalPackets = null, int index = -1) {
       List<int> list = new List<int>();
       list.Add(id);
       if (additionalPackets!=null)
         foreach (int i in additionalPackets)
           list.Add(i);
-      values.Add(new Value(name, unit, tag, formula, list));
+      values.Add(new Value(name, unit, tag, formula, list, index));
     }
     public void Update(byte[] bytes) {
       foreach (var val in values)

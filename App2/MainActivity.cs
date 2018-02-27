@@ -52,7 +52,6 @@ namespace TeslaSCAN
 
     public bool convertToImperial=false;
 
-    public System.IO.Stream inputStream;
     const int PICKFILE_REQUEST_CODE=500;
     const int PICK_TRIP=600;
     public string filePath;
@@ -79,11 +78,13 @@ namespace TeslaSCAN
     string[,] tabTitle = new string[,] {
         {"All","","0","1" },
         {"Perf","p","1","2" },
-        {"Temps","c","0","1" },
+        {"Temps","c","1","2" },
+        {"HVAC","h","1","2" },
+        {"Eff","e","1","2" },
         {"Battery","b","0","1" },
-        {"HVAC","h","0","1" },
-        {"Cells","z","1","2" },
-        //{"Total","t","0","1" },
+        {"BMS","z","1","4" },
+        {"Cells","x","1","2" },
+        {"Total","t","2","2" },
         {"Trip","t","2","2" }
       };
 
@@ -117,22 +118,12 @@ namespace TeslaSCAN
       editor.Commit();
     }
 
-    protected override async void OnCreate(Bundle bundle) {
+    protected override void OnCreate(Bundle bundle) {
       base.OnCreate(bundle);
 
-      starting = true;
+      try {
 
-#if disablebluetooth
-            //inputStream = Assets.Open("RawLog.2017-09-17.21-10-56 P100D.txt");
-                    //inputStream = Assets.Open("RawLog 2017-02-02 17-00-34.txt"); // fra model X
-                    //inputStream = Assets.Open("RawLog 2017-01-19 16-30.txt");
-                    //inputStream = Assets.Open("RawLog 2017-01-19 08-32.txt");
-            inputStream = Assets.Open("RawLog 2017-12-03 23-46-09.txt");
-            //inputStream = Assets.Open("RawLog 2017-04-19 07-55-34.txt");
-            //inputStream = Assets.Open("RawLog 2017-05-30 16-17-44 kun 210-pakker.txt");
-      //inputStream = Assets.Open("RawLog 2017-05-05 15-18-10.txt"); // this one has only battery amps, but with errors!
-      //inputStream = Assets.Open("RawLog 2017-05-05 15-06-47.txt"); // this one with errors!
-#endif
+        starting = true;
 
       //verifyStoragePermissions();
 
@@ -235,6 +226,38 @@ namespace TeslaSCAN
         //ladapter.NotifyDataSetChanged();
       };
 
+
+      var VersionName = PackageManager.GetPackageInfo(PackageName, 0).VersionName;
+      //Toast.MakeText(this, "Version " + VersionName, ToastLength.Long).Show();
+      prefMenu.Menu.Add("Version " + VersionName);
+      var StoredVersion = prefs.GetString("version", "");
+      if (StoredVersion!=VersionName) {
+          AlertDialog.Builder alert = new AlertDialog.Builder(this);
+          alert.SetTitle("Welcome to Scan My Tesla version "+VersionName+"!");
+
+          if (StoredVersion=="" && prefs.All.Keys.Any() ) // if there are any prefs in here, must mean we are upgrading
+          alert.SetMessage(                               // but version recording started in 1.3.0, so upgrading from earlier than that
+            "This version has some new and redesigned tabs.\n"+
+            "Use 'Factory reset all tabs' from the left menu if you want the new layout.\n"+
+            "Or, you can select 'New tab' from the right menu to add a single tab from the templates.");
+          
+          alert.SetCancelable(true);
+          alert.SetPositiveButton("Changelog", (senderAlert, args) => {
+            var uri = Android.Net.Uri.Parse("https://sites.google.com/view/scanmytesla/changelog");
+            var intent = new Intent(Intent.ActionView, uri);
+            StartActivity(intent);
+          });
+
+          alert.SetNegativeButton("Close", (senderAlert, args) => {            
+          });
+
+          Dialog dialog = alert.Create();
+          dialog.Show();
+
+          PutPref("version", VersionName);
+        }
+      
+
 #if !disablebluetooth
 
       var storedDevice = prefs.GetString("device", "");
@@ -253,19 +276,6 @@ namespace TeslaSCAN
       //Finish();
 
 
-      /* } catch (Exception e) {
-         //set alert for executing the task
-         AlertDialog.Builder alert = new AlertDialog.Builder(this);
-         alert.SetTitle("Error");
-         alert.SetMessage(e.ToString());
-         alert.SetCancelable(false);
-         alert.SetPositiveButton("OK", (senderAlert, args) => {
-           System.Environment.Exit(1);
-         });
-
-         Dialog dialog = alert.Create();
-         dialog.Show();
-       }*/
 #else
 
       var t = tabs.Where(x => x.name == prefs.GetString("currentTab", "")).FirstOrDefault();
@@ -282,12 +292,26 @@ namespace TeslaSCAN
 
       verifyStoragePermissions();
 
-      /*if (LogTimer == null)
-        LogTimer = new Timer(LogTimerCallback, null, 2000, 200);*/
+        /*if (LogTimer == null)
+          LogTimer = new Timer(LogTimerCallback, null, 2000, 200);*/
 
-      //SupportFunctions.Version = context.PackageManager.GetPackageInfo(context.PackageName, 0).VersionName;
-      //prefs.GetInt("")
+        //SupportFunctions.Version = context.PackageManager.GetPackageInfo(context.PackageName, 0).VersionName;
+        //prefs.GetInt("")
 
+      }
+      catch (Exception e) {
+        //set alert for executing the task
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.SetTitle("Error");
+        alert.SetMessage(e.ToString());
+        alert.SetCancelable(false);
+        alert.SetPositiveButton("OK", (senderAlert, args) => {
+          System.Environment.Exit(1);
+        });
+
+        Dialog dialog = alert.Create();
+        dialog.Show();
+      }
     }
 
     private void LoadTabs()
@@ -359,8 +383,13 @@ namespace TeslaSCAN
       } else
         tab.ActionBarTab = aTab;
       tab.include = parser.GetValues(tag);
+      if (name == "Eff")
+        tab.include = 
+          tab.include.OrderBy(x => x.unit.Trim()).ToList();
       tab.size = int.Parse(size);
       tab.style = int.Parse(gaugeType);
+      if (name == "BMS")
+        tab.style = 3;
 
       aTab.TabSelected += (sender, args) => {
         currentTab = tab;
@@ -517,6 +546,7 @@ namespace TeslaSCAN
             logfast = !e.Item.IsChecked);
           verifyStoragePermissions();
           parser.LogFast(logfast, filePath);
+          bluetoothHandler.ChangeFilter(currentTab.include);
           if (logfast)
             ActionBar.NavigationMode = ActionBarNavigationMode.Standard;
           else
@@ -589,10 +619,8 @@ namespace TeslaSCAN
         case Resource.Id.resettrip:
           parser.ResetTrip();
           flagNewTrip = true;
-          ActionBar.SelectTab(currentTab.ActionBarTab);
+          bluetoothHandler.ChangeFilter(currentTab.include);
           //SaveTabs();
-          //verifyStoragePermissions();
-          //parser.SaveTrip(filePath);
           return;
         case Resource.Id.newtrip:
           //parser.LoadTrip(filePath+ "/TripStart 2017-03-02 21-31-36.xml");
@@ -671,10 +699,24 @@ namespace TeslaSCAN
           editor.Commit();
           Toast.MakeText(this, "Tabs will be reset on app restart.\nTo undo, edit any tab now", ToastLength.Long).Show();
           return;
+        case Resource.Id.resetthrow:
+          ladapter.limits.Clear();
+          foreach (var item in ladapter.items)
+            item.UpdateLimits(item.GetValue(false));
+          return;
+        case Resource.Id.help:
+          uri = Android.Net.Uri.Parse("https://sites.google.com/view/scanmytesla/changelog");
+          intent = new Intent(Intent.ActionView, uri);
+          StartActivity(intent);
+          return;
       }
     }
 
     public override void OnCreateContextMenu(IContextMenu menu, View v, IContextMenuContextMenuInfo menuInfo) {
+      if (parser.fastLogEnabled) {
+        Toast.MakeText(this, "Items can not be changed while logging", ToastLength.Long).Show();
+        return;
+      }
       base.OnCreateContextMenu(menu, v, menuInfo);
       MenuInflater.Inflate(Resource.Menu.ContextMenu, menu);
     }
