@@ -10,6 +10,7 @@ The code is free to use for anything but:
 - Legal action or negative PR against Tesla Motors or me.
 
 I will however encourage to port to Raspberry Pi, web servers, Apple IOS... and so on.
+I will also encourage using the UI and framework to decode other CAN things, such as other brand cars.
 
 
 
